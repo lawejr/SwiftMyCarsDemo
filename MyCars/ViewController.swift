@@ -12,7 +12,7 @@ import CoreData
 class ViewController: UIViewController {
   
   lazy var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-  
+  var selectedCar: Car!
   
   @IBOutlet weak var segmentedControl: UISegmentedControl!
   @IBOutlet weak var markLabel: UILabel!
@@ -26,8 +26,20 @@ class ViewController: UIViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    // Do any additional setup after loading the view, typically from a nib.
     
+    getDataFromFile()
+    let carsRequest: NSFetchRequest<Car> = Car.fetchRequest()
+    let mark = segmentedControl.titleForSegment(at: 0)
+    
+    carsRequest.predicate = NSPredicate(format: "mark == %@", mark!)
+
+    do {
+      let results = try context.fetch(carsRequest)
+      selectedCar = results[0]
+      insertDataFrom(selectedCar: selectedCar)
+    } catch {
+      print(error.localizedDescription)
+    }
   }
   
   override func didReceiveMemoryWarning() {
@@ -39,11 +51,12 @@ class ViewController: UIViewController {
   func getDataFromFile() {
     let carsRequest: NSFetchRequest<Car> = Car.fetchRequest()
     // Пример-пустышка, как делать запрос выборки данных по какому-то конкретному значению
-    carsRequest.predicate = NSPredicate(format: "mark !=nil")
+    carsRequest.predicate = NSPredicate(format: "mark != nil")
     
     var records = 0
     
     do {
+      // Подсчет количества результатов в ответе из CoreData
       let count = try context.count(for: carsRequest)
       records = count
     } catch {
@@ -92,6 +105,23 @@ class ViewController: UIViewController {
     let blue = colorDictionary["blue"] as! NSNumber
     
     return UIColor(red: CGFloat(red)/255, green: CGFloat(green)/255, blue: CGFloat(blue)/255, alpha: 1.0)
+  }
+  
+  func insertDataFrom(selectedCar: Car) {
+    carImageView.image = UIImage(data: selectedCar.imageData! as Data)
+    markLabel.text = selectedCar.mark
+    modelLabel.text = selectedCar.model
+    myChoiceImageView.isHidden = !(selectedCar.myChoice)
+    ratingLabel.text = "Rating: \(selectedCar.rating) / 10"
+    numberOfTripsLabel.text = "Number of trips: \(selectedCar.timesDriven)"
+    
+    // Позволяет отображать дату в текстовом формате по имеющимся шаблонам
+    let df = DateFormatter()
+    df.dateStyle = .short
+    df.timeStyle = .none
+    lastTimeStartedLabel.text = "Last time started: \(df.string(from: selectedCar.lastStarted! as Date))"
+    
+    segmentedControl.tintColor = selectedCar.tintColor as! UIColor
   }
   
   
