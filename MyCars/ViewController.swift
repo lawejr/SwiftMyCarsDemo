@@ -112,7 +112,7 @@ class ViewController: UIViewController {
     markLabel.text = selectedCar.mark
     modelLabel.text = selectedCar.model
     myChoiceImageView.isHidden = !(selectedCar.myChoice)
-    ratingLabel.text = "Rating: \(selectedCar.rating) / 10"
+    ratingLabel.text = "Rating: \(selectedCar.rating) / 10.0"
     numberOfTripsLabel.text = "Number of trips: \(selectedCar.timesDriven)"
     
     // Позволяет отображать дату в текстовом формате по имеющимся шаблонам
@@ -124,17 +124,57 @@ class ViewController: UIViewController {
     segmentedControl.tintColor = selectedCar.tintColor as! UIColor
   }
   
+  func update(rating: String) {
+    selectedCar.rating = Double(rating) ?? 0.0
+    
+    do {
+      try context.save()
+      insertDataFrom(selectedCar: selectedCar)
+    } catch {
+      let ac = UIAlertController(title: "Wrong value", message: "Wrong input", preferredStyle: .alert)
+      let ok = UIAlertAction(title: "Ok", style: .default, handler: nil)
+      
+      ac.addAction(ok)
+      
+      present(ac, animated: true, completion: nil)
+    }
+
+  }
+  
   
   @IBAction func segmentedCtrlPressed(_ sender: UISegmentedControl) {
     
   }
   
   @IBAction func startEnginePressed(_ sender: UIButton) {
+//    let timesDriven = selectedCar.timesDriven
+    selectedCar.timesDriven += 1
+    // Устанавливает текущее время
+    selectedCar.lastStarted = NSDate()
     
+    do {
+      try context.save()
+      insertDataFrom(selectedCar: selectedCar)
+    } catch {
+      print(error.localizedDescription)
+    }
   }
   
   @IBAction func rateItPressed(_ sender: UIButton) {
+    let ac = UIAlertController(title: "Rati it", message: "Rate this car please", preferredStyle: .alert)
+    let ok = UIAlertAction(title: "Ok", style: .default) { action in
+      let textField = ac.textFields?[0]
+      self.update(rating: (textField?.text)!)
+    }
+    let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
     
+    ac.addTextField { textField in
+      textField.keyboardType = .numberPad
+    }
+    ac.addAction(ok)
+    ac.addAction(cancel)
+    
+    present(ac, animated: true, completion: nil)
   }
 }
 
