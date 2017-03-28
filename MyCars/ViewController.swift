@@ -143,11 +143,21 @@ class ViewController: UIViewController {
   
   
   @IBAction func segmentedCtrlPressed(_ sender: UISegmentedControl) {
+    let mark = sender.titleForSegment(at: sender.selectedSegmentIndex)
+    let carRequest: NSFetchRequest<Car> = Car.fetchRequest()
     
+    carRequest.predicate = NSPredicate(format: "mark == %@", mark!)
+    
+    do {
+      let result = try context.fetch(carRequest)
+      selectedCar = result[0]
+      insertDataFrom(selectedCar: selectedCar)
+    } catch {
+      print(error.localizedDescription)
+    }
   }
   
   @IBAction func startEnginePressed(_ sender: UIButton) {
-//    let timesDriven = selectedCar.timesDriven
     selectedCar.timesDriven += 1
     // Устанавливает текущее время
     selectedCar.lastStarted = NSDate()
